@@ -1,27 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My AI Assistant</title>
-
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Voice Assistant</title>
     <style>
-      body {
-        margin: 0;
-        padding: 0;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: #111;
-      }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #111;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        /* Animated Orb */
+        .orb {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, 
+                #00d4ff, #0099ff, #0066ff, #0033ff, 
+                #6600ff, #9900ff, #cc00ff, #00d4ff);
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            animation: rotate 8s linear infinite, pulse 2s ease-in-out infinite;
+            box-shadow: 0 0 60px rgba(0, 212, 255, 0.6),
+                        0 0 120px rgba(0, 153, 255, 0.4),
+                        inset 0 0 60px rgba(255, 255, 255, 0.1);
+        }
+
+        .orb::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(255, 255, 255, 0.3), 
+                transparent 50%);
+            filter: blur(20px);
+        }
+
+        .orb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 80px rgba(0, 212, 255, 0.8),
+                        0 0 160px rgba(0, 153, 255, 0.6);
+        }
+
+        .orb.active {
+            animation: rotate 4s linear infinite, pulse-active 1s ease-in-out infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes pulse-active {
+            0%, 100% { 
+                transform: scale(1.1); 
+                box-shadow: 0 0 100px rgba(0, 212, 255, 1),
+                            0 0 200px rgba(0, 153, 255, 0.8);
+            }
+            50% { 
+                transform: scale(1.15); 
+                box-shadow: 0 0 120px rgba(0, 212, 255, 1),
+                            0 0 240px rgba(0, 153, 255, 1);
+            }
+        }
+
+        /* Button */
+        .call-button {
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .call-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .call-button.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        /* Hidden ElevenLabs Widget Container */
+        .widget-container {
+            display: none;
+        }
+
+        /* Status Text */
+        .status {
+            color: #888;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .status.active {
+            color: #00d4ff;
+            font-weight: bold;
+        }
     </style>
-  </head>
-  <body>
-    <!-- ElevenLabs Conversational AI Widget -->
-    <elevenlabs-convai agent-id="agent_0401k6d3fm35fa4snzntazwec2es"></elevenlabs-convai>
-    
-    <!-- ElevenLabs widget script -->
-    <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
-  </body>
+</head>
+<body>
+    <div class="container">
+        <div class="orb" id="orb"></div>
+        <button class="call-button" id="callButton">
+            <span id="buttonText">🎤 Call AI Agent</span>
+        </button>
+        <div class="status" id="status">Click the orb or button to start</div>
+    </div>
+
+    <!-- Hidden ElevenLabs Widget -->
+    <div class="widget-container">
+        <elevenlabs-convai agent-id="agent_0401k6d3fm35fa4snzntazwec2es"></elevenlabs-convai>
+        <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
+    </div>
+
+    <script>
+        const orb = document.getElementById('orb');
+        const callButton = document.getElementById('callButton');
+        const buttonText = document.getElementById('buttonText');
+        const status = document.getElementById('status');
+        let isActive = false;
+
+        function toggleAgent() {
+            isActive = !isActive;
+            
+            if (isActive) {
+                // Activate
+                orb.classList.add('active');
+                callButton.classList.add('active');
+                buttonText.textContent = '🔴 End Call';
+                status.textContent = 'AI Agent is listening...';
+                status.classList.add('active');
+                
+                // Trigger ElevenLabs widget programmatically
+                triggerElevenLabsWidget();
+            } else {
+                // Deactivate
+                orb.classList.remove('active');
+                callButton.classList.remove('active');
+                buttonText.textContent = '🎤 Call AI Agent';
+                status.textContent = 'Click the orb or button to start';
+                status.classList.remove('active');
+            }
+        }
+
+        function triggerElevenLabsWidget() {
+            // Wait for ElevenLabs widget to load
+            const checkWidget = setInterval(() => {
+                const widget = document.querySelector('elevenlabs-convai');
+                if (widget && widget.shadowRoot) {
+                    // Find and click the widget button
+                    const widgetButton = widget.shadowRoot.querySelector('button');
+                    if (widgetButton) {
+                        widgetButton.click();
+                        clearInterval(checkWidget);
+                    }
+                }
+            }, 100);
+        }
+
+        // Event listeners
+        orb.addEventListener('click', toggleAgent);
+        callButton.addEventListener('click', toggleAgent);
+    </script>
+</body>
 </html>
