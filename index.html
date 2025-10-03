@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Voice Assistant</title>
-
     <style>
         * {
             margin: 0;
@@ -27,9 +26,9 @@
             flex-direction: column;
             align-items: center;
             gap: 2rem;
+            z-index: 10;
         }
 
-        /* Animated Orb */
         .orb {
             width: 300px;
             height: 300px;
@@ -62,8 +61,6 @@
 
         .orb:hover {
             transform: scale(1.1);
-            box-shadow: 0 0 80px rgba(0, 212, 255, 0.8),
-                        0 0 160px rgba(0, 153, 255, 0.6);
         }
 
         .orb.active {
@@ -88,12 +85,9 @@
             }
             50% { 
                 transform: scale(1.15); 
-                box-shadow: 0 0 120px rgba(0, 212, 255, 1),
-                            0 0 240px rgba(0, 153, 255, 1);
             }
         }
 
-        /* Button */
         .call-button {
             padding: 1rem 2rem;
             font-size: 1.2rem;
@@ -104,133 +98,46 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
         }
 
         .call-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
         }
 
         .call-button.active {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
 
-        /* Status Text */
         .status {
             color: #888;
             font-size: 0.9rem;
-            margin-top: 1rem;
         }
 
         .status.active {
             color: #00d4ff;
-            font-weight: bold;
-        }
-
-        /* Hide the default widget button */
-        elevenlabs-convai {
-            display: none !important;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="orb" id="orb"></div>
-        <button class="call-button" id="callButton">
-            <span id="buttonText">🎤 Call AI Agent</span>
+        <div class="orb" id="orb" onclick="startCall()"></div>
+        <button class="call-button" id="callButton" onclick="startCall()">
+            🎤 Call Chitti
         </button>
-        <div class="status" id="status">Click the orb or button to start</div>
+        <div class="status" id="status">Click to start</div>
     </div>
 
-    <!-- Hidden ElevenLabs Widget Container -->
-    <div id="widget-container"></div>
+    <!-- ElevenLabs Widget -->
+    <elevenlabs-convai agent-id="agent_0401k6d3fm35fa4snzntazwec2es"></elevenlabs-convai>
+    <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
 
     <script>
-        const orb = document.getElementById('orb');
-        const callButton = document.getElementById('callButton');
-        const buttonText = document.getElementById('buttonText');
-        const status = document.getElementById('status');
-        let isActive = false;
-        let widgetLoaded = false;
-        let widgetElement = null;
-
-        // Function to load ElevenLabs widget dynamically
-        function loadElevenLabsWidget() {
-            if (widgetLoaded) return;
-
-            const agentId = "agent_0401k6d3fm35fa4snzntazwec2es";
-            const container = document.getElementById('widget-container');
-
-            // Create the widget element
-            widgetElement = document.createElement('elevenlabs-convai');
-            widgetElement.setAttribute('agent-id', agentId);
-            container.appendChild(widgetElement);
-
-            // Load the ElevenLabs script
-            const script = document.createElement('script');
-            script.src = 'https://elevenlabs.io/convai-widget/index.js';
-            script.type = 'text/javascript';
-            script.async = true;
-            document.body.appendChild(script);
-
-            widgetLoaded = true;
+        function startCall() {
+            document.getElementById('orb').classList.add('active');
+            document.getElementById('callButton').classList.add('active');
+            document.getElementById('status').textContent = 'Connecting...';
+            document.getElementById('status').classList.add('active');
         }
-
-        // Function to trigger the widget
-        function triggerWidget() {
-            // Load widget if not already loaded
-            if (!widgetLoaded) {
-                loadElevenLabsWidget();
-            }
-
-            // Wait for widget to be ready and trigger it
-            setTimeout(() => {
-                const widget = document.querySelector('elevenlabs-convai');
-                if (widget && widget.shadowRoot) {
-                    const button = widget.shadowRoot.querySelector('button');
-                    if (button) {
-                        button.click();
-                        console.log('Widget triggered successfully');
-                    }
-                } else {
-                    console.log('Widget not ready yet, retrying...');
-                    // Retry after a short delay
-                    setTimeout(triggerWidget, 500);
-                }
-            }, 1000);
-        }
-
-        function toggleAgent() {
-            if (!isActive) {
-                // Activate
-                isActive = true;
-                orb.classList.add('active');
-                callButton.classList.add('active');
-                buttonText.textContent = 'End Call';
-                status.textContent = 'AI Agent is listening...';
-                status.classList.add('active');
-                
-                // Trigger the ElevenLabs widget
-                triggerWidget();
-            } else {
-                // Deactivate
-                isActive = false;
-                orb.classList.remove('active');
-                callButton.classList.remove('active');
-                buttonText.textContent = 'Call Chitti';
-                status.textContent = 'Click the orb or button to start';
-                status.classList.remove('active');
-                
-                // Note: Closing the widget requires clicking the X button in the widget itself
-            }
-        }
-
-        // Event listeners
-        orb.addEventListener('click', toggleAgent);
-        callButton.addEventListener('click', toggleAgent);
     </script>
 </body>
 </html>
