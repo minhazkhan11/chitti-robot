@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Voice Assistant</title>
+
     <style>
         * {
             margin: 0;
@@ -117,11 +118,6 @@
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
 
-        /* Hidden ElevenLabs Widget Container */
-        .widget-container {
-            display: none;
-        }
-
         /* Status Text */
         .status {
             color: #888;
@@ -132,6 +128,11 @@
         .status.active {
             color: #00d4ff;
             font-weight: bold;
+        }
+
+        /* Hide the default widget button */
+        elevenlabs-convai {
+            display: none !important;
         }
     </style>
 </head>
@@ -144,11 +145,8 @@
         <div class="status" id="status">Click the orb or button to start</div>
     </div>
 
-    <!-- Hidden ElevenLabs Widget -->
-    <div class="widget-container">
-        <elevenlabs-convai agent-id="agent_0401k6d3fm35fa4snzntazwec2es"></elevenlabs-convai>
-        <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
-    </div>
+    <!-- Hidden ElevenLabs Widget Container -->
+    <div id="widget-container"></div>
 
     <script>
         const orb = document.getElementById('orb');
@@ -156,43 +154,78 @@
         const buttonText = document.getElementById('buttonText');
         const status = document.getElementById('status');
         let isActive = false;
+        let widgetLoaded = false;
+        let widgetElement = null;
+
+        // Function to load ElevenLabs widget dynamically
+        function loadElevenLabsWidget() {
+            if (widgetLoaded) return;
+
+            const agentId = "agent_0401k6d3fm35fa4snzntazwec2es";
+            const container = document.getElementById('widget-container');
+
+            // Create the widget element
+            widgetElement = document.createElement('elevenlabs-convai');
+            widgetElement.setAttribute('agent-id', agentId);
+            container.appendChild(widgetElement);
+
+            // Load the ElevenLabs script
+            const script = document.createElement('script');
+            script.src = 'https://elevenlabs.io/convai-widget/index.js';
+            script.type = 'text/javascript';
+            script.async = true;
+            document.body.appendChild(script);
+
+            widgetLoaded = true;
+        }
+
+        // Function to trigger the widget
+        function triggerWidget() {
+            // Load widget if not already loaded
+            if (!widgetLoaded) {
+                loadElevenLabsWidget();
+            }
+
+            // Wait for widget to be ready and trigger it
+            setTimeout(() => {
+                const widget = document.querySelector('elevenlabs-convai');
+                if (widget && widget.shadowRoot) {
+                    const button = widget.shadowRoot.querySelector('button');
+                    if (button) {
+                        button.click();
+                        console.log('Widget triggered successfully');
+                    }
+                } else {
+                    console.log('Widget not ready yet, retrying...');
+                    // Retry after a short delay
+                    setTimeout(triggerWidget, 500);
+                }
+            }, 1000);
+        }
 
         function toggleAgent() {
-            isActive = !isActive;
-            
-            if (isActive) {
+            if (!isActive) {
                 // Activate
+                isActive = true;
                 orb.classList.add('active');
                 callButton.classList.add('active');
-                buttonText.textContent = '🔴 End Call';
+                buttonText.textContent = 'End Call';
                 status.textContent = 'AI Agent is listening...';
                 status.classList.add('active');
                 
-                // Trigger ElevenLabs widget programmatically
-                triggerElevenLabsWidget();
+                // Trigger the ElevenLabs widget
+                triggerWidget();
             } else {
                 // Deactivate
+                isActive = false;
                 orb.classList.remove('active');
                 callButton.classList.remove('active');
-                buttonText.textContent = '🎤 Call AI Agent';
+                buttonText.textContent = 'Call Chitti';
                 status.textContent = 'Click the orb or button to start';
                 status.classList.remove('active');
+                
+                // Note: Closing the widget requires clicking the X button in the widget itself
             }
-        }
-
-        function triggerElevenLabsWidget() {
-            // Wait for ElevenLabs widget to load
-            const checkWidget = setInterval(() => {
-                const widget = document.querySelector('elevenlabs-convai');
-                if (widget && widget.shadowRoot) {
-                    // Find and click the widget button
-                    const widgetButton = widget.shadowRoot.querySelector('button');
-                    if (widgetButton) {
-                        widgetButton.click();
-                        clearInterval(checkWidget);
-                    }
-                }
-            }, 100);
         }
 
         // Event listeners
